@@ -1,9 +1,57 @@
 const express = require('express');
 const app = express();
+const mongoose = require("mongoose");
+const Blog  = require('./models/blog')
 
 //  register view engine
 app.set('view engine', 'ejs')
 
+
+//connect to mongodb
+const DBURI = "mongodb+srv://kemi:kemi123@cluster0.3jtd3.mongodb.net/kemi?retryWrites=true&w=majority";
+mongoose.connect(DBURI, {useNewUrlParser:true, useUnifiedTopology: true})
+.then((result) => app.listen(3000))
+.catch((err) => console.log(err))
+//serving static files & middleware
+app. use(express.static('public'))
+
+// mongoose and mongo sandbox routes
+app.get('/add-blog', (req, res) =>{
+    const blog = new Blog({
+        title: "new blog 3  ",
+        snippet: "about blog",
+        body: "more about new blog"
+    });
+    blog.save()
+    .then((result) => {
+        res.send(result)
+    })
+    .catch((err) => {
+        console.log(err);
+    });
+     
+})
+
+app.get('/all-blogs', (req, res) => {
+    Blog.find()
+    .then((result) =>{
+        res.send(result);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
+})
+
+//get single blog by id
+app.get('/single-blog', (req, res) => {
+    Blog.findById('606b7a864408dc1a008094fb')
+    .then((result) =>{
+        res.send(result);
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+})
 //routing
 app.get('/', (req, res) =>{
     const blogs = [
@@ -37,4 +85,3 @@ app.use((req, res) => {
 
 
 
-app.listen(3000)
