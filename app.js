@@ -14,65 +14,68 @@ mongoose.connect(DBURI, {useNewUrlParser:true, useUnifiedTopology: true})
 .catch((err) => console.log(err))
 //serving static files & middleware
 app. use(express.static('public'))
-
-// mongoose and mongo sandbox routes
-app.get('/add-blog', (req, res) =>{
-    const blog = new Blog({
-        title: "new blog 3  ",
-        snippet: "about blog",
-        body: "more about new blog"
-    });
-    blog.save()
-    .then((result) => {
-        res.send(result)
-    })
-    .catch((err) => {
-        console.log(err);
-    });
-     
-})
-
-app.get('/all-blogs', (req, res) => {
-    Blog.find()
-    .then((result) =>{
-        res.send(result);
-    })
-    .catch((err) => {
-        console.log(err);
-    });
-})
-
-//get single blog by id
-app.get('/single-blog', (req, res) => {
-    Blog.findById('606b7a864408dc1a008094fb')
-    .then((result) =>{
-        res.send(result);
-    })
-    .catch((err) => {
-        console.log(err)
-    })
-})
-//routing
+app.use(express.urlencoded({ extended: true}));
+//routing 
 app.get('/', (req, res) =>{
-    const blogs = [
-        {title: "fun stuff to learn", snippet: `Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem est similique ut reiciendis quo, maiores, corrupti culpa quaerat illo animi ullam dolorum fuga iusto labore at. Voluptatum officia quasi ipsam?`},
-        {title: "fun places to visit", snippet: `Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem est similique ut reiciendis quo, maiores, corrupti culpa quaerat illo animi ullam dolorum fuga iusto labore at. Voluptatum officia quasi ipsam?`},
-        {title: "food tourism locations", snippet: `Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem est similique ut reiciendis quo, maiores, corrupti culpa quaerat illo animi ullam dolorum fuga iusto labore at. Voluptatum officia quasi ipsam?`},
-    ]
-    res.render('index', { title: "home", blogs });
-})
+  res.redirect('/blogs')
+});
 
 app.get('/about', (req, res) =>{ 
     res.render('about', { title: "about" });
 
 })
 
+
+// blog routes
+app.get('/blogs', (req, res) => {
+  Blog.find().sort({createdAt: -1})
+  .then((result) => {
+    res.render('index', { title: 'All Blogs', blogs: result})
+  })
+  .catch((err) => {
+      console.log(err);
+  })
+}) 
+
+// post request
+app.post('/blogs', (req, res) => {
+    const blog = new Blog(req.body);
+
+    blog.save()
+    .then((result) => {
+      res.redirect('/blogs');  
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+})
+
+app.get('/blogs/:id', (req,res) => {
+  const id = req.params.id;
+  Blog.findById(id)
+  .then((result) => {
+    res. render('details', { blog: result, title: 'Blog Details'});
+  })
+  .catch((err) => {
+    console.log(err)
+  })
+}) 
+
+app.delete('/blogs/:id', (req, res) => {
+  const id = req.params.id;
+
+  Blog.findByIdAndDelete(id)
+  .then(result => {
+    res.json({ redirect:  '/blogs'})
+  })
+} )
+
 app.get('/blogs/create', (req, res) =>{
     res.render('create', { title: "create blog" });
 })
 
 // redirect
-app.get('/about-us', (req, res) =>{
+app.get('/about-us', (req, res) =>{ 
     res.redirect('/about')
 }) 
 
